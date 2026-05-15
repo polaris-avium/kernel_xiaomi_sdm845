@@ -498,16 +498,19 @@ static void msm_restart_prepare(const char *cmd)
 	else
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_HARD_RESET);
 
-        // Force Reboot Recovery
-        /*
-        patch
-        */
-        
 	qpnp_pon_set_restart_reason(
-	    PON_RESTART_REASON_RECOVERY);
-	__raw_writel(0x77665502, restart_reason);        
+            PON_RESTART_REASON_RECOVERY);
+         __raw_writel(0x77665502, restart_reason);
         flush_cache_all();
         return;
+
+	if (in_panic) {
+		// Reboot to recovery
+		qpnp_pon_set_restart_reason(
+			PON_RESTART_REASON_RECOVERY);
+		__raw_writel(0x77665502, restart_reason);
+		goto finish_set_restart_reason;
+	}
 
 	if (cmd != NULL) {
 		if (!strncmp(cmd, "bootloader", 10)) {
